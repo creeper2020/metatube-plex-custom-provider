@@ -1,51 +1,55 @@
 # MetaTube Plex Custom Provider
 
-这是一个面向 Plex Custom Metadata Providers API 的 MetaTube 刮削器。
+[中文文档（Chinese）](./README_ZH.md)
 
-项目把 `metatube-community/metatube-plex-plugins` 的 Plex 插件逻辑迁移成独立 HTTP Provider，并把 `metatube-community/metatube-sdk-go` 的刮削引擎整合进 `provider-go/`。运行时不再需要单独部署 MetaTube API Server，Plex 只需要访问这个 Provider 服务。
+A standalone MetaTube scraper service for the **Plex Custom Metadata Providers API**.
 
-代码来源和许可说明见 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+This project extracts the Plex plugin workflow from `metatube-community/metatube-plex-plugins` and ships it as an HTTP provider. It embeds the scraping engine from `metatube-community/metatube-sdk-go` directly under `provider-go/`, so Plex can call this provider service directly without deploying a separate MetaTube API server.
 
-## 当前状态
+For source attribution and license details, see [ATTRIBUTION.md](./ATTRIBUTION.md).
 
-- 正式实现：[`provider-go/`](./provider-go/README_ZH.md)
-- 运行方式：单个 Go 二进制，监听本地端口，推荐通过反向代理给 Plex 访问
-- 后端依赖：无独立 MetaTube API Server，直接调用 `metatube-sdk-go`
-- Plex 版本：面向支持 Custom Metadata Providers 的 Plex 版本
-- 预告片：当前不输出预告片数据
+## Status
 
-## 功能
+- Primary implementation: [`provider-go/`](./provider-go)
+- Runtime: single Go binary
+- Recommended deployment: localhost + reverse proxy (HTTPS)
+- Plex requirement: a Plex version that supports **Custom Metadata Providers**
+- Trailer output: currently not included
 
-- Plex Custom Metadata Provider 根文档
-- 手动匹配：`POST /library/metadata/matches`
-- 元数据详情：`GET /library/metadata/{ratingKey}`
-- 图片列表：`GET /library/metadata/{ratingKey}/images`
-- 封面、背景图、演员图代理
-- 多来源搜索、精确番号过滤和结果合并
-- 影片源过滤和排序
-- 标题模板
-- 标题、演员、类型替换表
-- AVBASE 真实演员名替换
-- 标题和简介翻译
-- 演员头像、导演、片商、类型、评分
-- 中文字幕识别和封面徽章
-- 路径 token 鉴权
-- 反向代理公网 URL 生成支持
+## What It Supports
 
-## 目录结构
+- Provider root document for Plex Custom Metadata Providers
+- Manual matching endpoint: `POST /library/metadata/matches`
+- Metadata detail endpoint: `GET /library/metadata/{ratingKey}`
+- Image list endpoint: `GET /library/metadata/{ratingKey}/images`
+- Poster / background / actor-image proxying
+- Multi-source search, exact number filtering, merged ranking
+- Source-level filtering and ordering
+- Title templates
+- Title / actor / genre substitution tables
+- AVBASE real-name actor replacement
+- Title and summary translation
+- Directors, studios, genres, actor avatars, ratings
+- Chinese-subtitle detection and cover badges
+- Path-token authentication
+- Reverse-proxy-aware public URL generation
+
+## Repository Structure
 
 ```text
-provider-go/          Go 单体版 Provider，当前主要实现
-provider/             早期 Python Provider 原型，保留作对照和回滚参考
-MetaTube.bundle/      上游旧版 Plex 插件代码，保留来源和兼容参考
-MetaTubeHelper.bundle/上游旧版辅助插件代码，保留来源和兼容参考
-ATTRIBUTION.md        上游代码和 SDK 引用说明
-PROJECT_MEMORY.md     项目维护记录
+provider-go/            Main Go provider implementation
+provider/               Early Python provider prototype (kept for reference)
+MetaTube.bundle/        Legacy upstream Plex plugin code (reference only)
+MetaTubeHelper.bundle/  Legacy upstream helper plugin code (reference only)
+ATTRIBUTION.md          Upstream source and SDK attribution
+PROJECT_MEMORY.md       Project maintenance notes
 ```
 
-## 构建
+## Prerequisites
 
-`provider-go/go.mod` 通过 `replace` 引用本地 `metatube-sdk-go`。请把两个仓库放在同一个父目录下：
+`provider-go/go.mod` uses a local replace directive for `metatube-sdk-go`.
+
+Recommended local directory layout:
 
 ```text
 workspace/
@@ -53,7 +57,13 @@ workspace/
   metatube-plex-custom-provider/
 ```
 
-然后构建：
+If your layout differs, update this entry in [`provider-go/go.mod`](./provider-go/go.mod):
+
+```go
+replace github.com/metatube-community/metatube-sdk-go => ../../metatube-sdk-go
+```
+
+## Build
 
 ```sh
 cd workspace/metatube-plex-custom-provider/provider-go
@@ -61,11 +71,9 @@ go test ./...
 go build -o metatube-plex-provider .
 ```
 
-如果你的 SDK 放在其他位置，修改 [`provider-go/go.mod`](./provider-go/go.mod) 里的 `replace github.com/metatube-community/metatube-sdk-go => ../../metatube-sdk-go`。
+## Run
 
-## 运行
-
-建议只监听本机地址，再通过 Nginx、Caddy 或其他反向代理暴露 HTTPS：
+Bind to localhost and expose externally through a reverse proxy:
 
 ```sh
 METATUBE_HOST=127.0.0.1 \
@@ -75,29 +83,27 @@ METATUBE_AUTH_TOKEN='replace-with-a-random-token' \
 ./metatube-plex-provider
 ```
 
-Provider 地址格式：
+Provider URL format:
 
 ```text
 https://your-domain.example/_metatube/<token>
 ```
 
-`<token>` 来自 `METATUBE_AUTH_TOKEN`。不要把真实 token 提交到仓库。
+`<token>` is `METATUBE_AUTH_TOKEN`. Do **not** commit real tokens.
 
-## Plex 添加方式
+## Add Provider in Plex
 
-在 Plex 的 Custom Metadata Providers 页面添加 Provider URL：
+In Plex, open **Custom Metadata Providers** and add:
 
 ```text
 https://your-domain.example/_metatube/<token>
 ```
 
-添加后，在对应影片库里选择这个自定义 Provider，然后对影片执行匹配或刷新元数据。
+Then select this provider for your movie library and run match/refresh.
 
-## 反向代理
+## Reverse Proxy Example (Nginx)
 
-Provider 会根据 `X-Forwarded-Proto` 和 `X-Forwarded-Host` 生成返回给 Plex 的图片 URL。反代时需要传这些头。
-
-Nginx 示例：
+The provider uses `X-Forwarded-Proto` and `X-Forwarded-Host` when generating image URLs returned to Plex.
 
 ```nginx
 location /_metatube/ {
@@ -109,63 +115,68 @@ location /_metatube/ {
 }
 ```
 
-公网部署时建议只暴露 HTTPS，不要直接开放 `8080`。
+For internet-facing deployments, expose HTTPS only and keep port `8080` private.
 
-## 常用配置
+## Common Configuration
 
-| 变量 | 默认值 | 说明 |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `METATUBE_HOST` | `127.0.0.1` | 监听地址 |
-| `METATUBE_PORT` | `8080` | 监听端口 |
-| `METATUBE_DSN` | `/home/plex/metatube-provider-go.db` | SQLite 或 PostgreSQL DSN |
-| `METATUBE_AUTH_PATH` | `_metatube` | 路径鉴权前缀 |
-| `METATUBE_AUTH_TOKEN` | 空 | 路径鉴权 token |
-| `METATUBE_REQUEST_TIMEOUT` | `60s` | 抓取请求超时 |
-| `METATUBE_MANUAL_LIMIT` | `10` | 手动匹配返回数量 |
-| `METATUBE_ENABLE_ACTOR_IMAGES` | `true` | 输出演员头像 |
-| `METATUBE_ENABLE_DIRECTORS` | `true` | 输出导演 |
-| `METATUBE_ENABLE_RATINGS` | `true` | 输出评分 |
-| `METATUBE_ENABLE_REAL_ACTOR_NAMES` | `false` | 通过 AVBASE 尝试替换真实演员名 |
-| `METATUBE_ENABLE_BADGES` | `false` | 给中文字幕影片封面加徽章 |
-| `METATUBE_BADGE_URL` | `zimu.png` | 徽章图片 |
-| `METATUBE_ENABLE_MOVIE_PROVIDER_FILTER` | `false` | 启用影片源过滤和排序 |
-| `METATUBE_MOVIE_PROVIDER_FILTER` | 空 | 影片源顺序，例如 `FANZA,JavBus,JAV321` |
-| `METATUBE_ENABLE_TITLE_TEMPLATE` | `false` | 启用标题模板 |
-| `METATUBE_TITLE_TEMPLATE` | `{number} {title}` | 标题模板 |
-| `METATUBE_ENABLE_TITLE_SUBSTITUTION` | `false` | 启用标题替换 |
-| `METATUBE_TITLE_SUBSTITUTION_TABLE` | 空 | Base64 替换表，每行 `旧=新` |
-| `METATUBE_ENABLE_ACTOR_SUBSTITUTION` | `false` | 启用演员替换 |
-| `METATUBE_ACTOR_SUBSTITUTION_TABLE` | 空 | Base64 替换表，每行 `旧=新` |
-| `METATUBE_ENABLE_GENRE_SUBSTITUTION` | `false` | 启用类型替换 |
-| `METATUBE_GENRE_SUBSTITUTION_TABLE` | 空 | Base64 替换表，每行 `旧=新` |
-| `METATUBE_TRANSLATION_MODE` | `Disabled` | 翻译范围 |
-| `METATUBE_TRANSLATION_ENGINE` | `Baidu` | 翻译引擎 |
-| `METATUBE_TRANSLATION_ENGINE_PARAMETERS` | 空 | 翻译引擎参数 |
+| `METATUBE_HOST` | `127.0.0.1` | Listen address |
+| `METATUBE_PORT` | `8080` | Listen port |
+| `METATUBE_DSN` | `/home/plex/metatube-provider-go.db` | SQLite or PostgreSQL DSN |
+| `METATUBE_AUTH_PATH` | `_metatube` | Auth path prefix |
+| `METATUBE_AUTH_TOKEN` | empty | Path auth token |
+| `METATUBE_REQUEST_TIMEOUT` | `60s` | Scrape request timeout |
+| `METATUBE_MANUAL_LIMIT` | `10` | Manual match result limit |
+| `METATUBE_ENABLE_ACTOR_IMAGES` | `true` | Include actor avatars |
+| `METATUBE_ENABLE_DIRECTORS` | `true` | Include directors |
+| `METATUBE_ENABLE_RATINGS` | `true` | Include ratings |
+| `METATUBE_ENABLE_REAL_ACTOR_NAMES` | `false` | Replace with AVBASE real actor names |
+| `METATUBE_ENABLE_BADGES` | `false` | Add subtitle badges |
+| `METATUBE_BADGE_URL` | `zimu.png` | Badge image URL |
+| `METATUBE_ENABLE_MOVIE_PROVIDER_FILTER` | `false` | Enable source filtering and ordering |
+| `METATUBE_MOVIE_PROVIDER_FILTER` | empty | Provider order, e.g. `FANZA,JavBus,JAV321` |
+| `METATUBE_ENABLE_TITLE_TEMPLATE` | `false` | Enable title template |
+| `METATUBE_TITLE_TEMPLATE` | `{number} {title}` | Title template |
+| `METATUBE_ENABLE_TITLE_SUBSTITUTION` | `false` | Enable title substitution |
+| `METATUBE_TITLE_SUBSTITUTION_TABLE` | empty | Base64 table, each line `old=new` |
+| `METATUBE_ENABLE_ACTOR_SUBSTITUTION` | `false` | Enable actor substitution |
+| `METATUBE_ACTOR_SUBSTITUTION_TABLE` | empty | Base64 table, each line `old=new` |
+| `METATUBE_ENABLE_GENRE_SUBSTITUTION` | `false` | Enable genre substitution |
+| `METATUBE_GENRE_SUBSTITUTION_TABLE` | empty | Base64 table, each line `old=new` |
+| `METATUBE_TRANSLATION_MODE` | `Disabled` | Translation scope |
+| `METATUBE_TRANSLATION_ENGINE` | `Baidu` | Translation engine |
+| `METATUBE_TRANSLATION_ENGINE_PARAMETERS` | empty | Translation engine parameters |
 
-标题模板支持：
+Supported title-template fields:
 
 ```text
 {provider} {id} {number} {title} {series} {maker} {label} {director} {actors} {first_actor} {year} {date}
 ```
 
-## 验证
+## Verification
 
 ```sh
 cd provider-go
 go test ./...
 ```
 
-本机健康检查：
+Health check example:
 
 ```sh
 curl http://127.0.0.1:8080/_metatube/<token>/health
 ```
 
-## 许可与引用
+## Troubleshooting
 
-本仓库是迁移和集成项目，保留上游代码来源说明：
+- If `go test` fails with `replacement directory ../../metatube-sdk-go does not exist`, fix the local repo layout or update the `replace` directive in `provider-go/go.mod`.
+- If module downloads fail in restricted environments, set an accessible `GOPROXY` or use your internal Go proxy.
 
-- `metatube-community/metatube-plex-plugins`：MIT License
-- `metatube-community/metatube-sdk-go`：Apache-2.0 License
+## License and Attribution
 
-详细来源、提交版本和说明见 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+This repository is a migration/integration project that preserves upstream attribution:
+
+- `metatube-community/metatube-plex-plugins`: MIT License
+- `metatube-community/metatube-sdk-go`: Apache-2.0 License
+
+See [ATTRIBUTION.md](./ATTRIBUTION.md) for detailed source repositories, commit references, and notes.
