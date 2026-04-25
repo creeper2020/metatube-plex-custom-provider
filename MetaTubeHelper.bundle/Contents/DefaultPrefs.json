@@ -1,0 +1,8 @@
+[
+  {
+    "id": "find_local_subtitles",
+    "label": "Find local subtitles",
+    "type": "bool",
+    "default": "true"
+  }
+]

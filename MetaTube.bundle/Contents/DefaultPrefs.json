@@ -1,0 +1,155 @@
+[
+  {
+    "id": "api_server",
+    "label": "API server",
+    "type": "text",
+    "default": "https://api.metatube.internal"
+  },
+  {
+    "id": "api_token",
+    "label": "API token",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "enable_collections",
+    "label": "Enable collections",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "enable_directors",
+    "label": "Enable directors",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "enable_ratings",
+    "label": "Enable ratings",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "enable_reviews",
+    "label": "Enable reviews",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "enable_trailers",
+    "label": "Enable trailers",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "enable_real_actor_names",
+    "label": "Enable real actor names",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "enable_badges",
+    "label": "Enable badges",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "badge_url",
+    "label": "Badge URL",
+    "type": "text",
+    "default": "zimu.png"
+  },
+  {
+    "id": "enable_movie_provider_filter",
+    "label": "Enable movie provider filter",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "movie_provider_filter",
+    "label": "Movie provider filter",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "enable_title_template",
+    "label": "Enable title template",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "title_template",
+    "label": "Title template",
+    "type": "text",
+    "default": "{number} {title}"
+  },
+  {
+    "id": "enable_title_substitution",
+    "label": "Enable title substitution",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "title_substitution_table",
+    "label": "Title substitution table (Base64 encoding required)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "enable_actor_substitution",
+    "label": "Enable actor substitution",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "actor_substitution_table",
+    "label": "Actor substitution table (Base64 encoding required)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "enable_genre_substitution",
+    "label": "Enable genre substitution",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "genre_substitution_table",
+    "label": "Genre substitution table (Base64 encoding required)",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "translation_mode",
+    "label": "Translation mode",
+    "type": "enum",
+    "values": [
+      "Disabled",
+      "Title",
+      "Summary",
+      "Reviews",
+      "Title and Summary",
+      "Title, Summary and Reviews"
+    ],
+    "default": "Disabled"
+  },
+  {
+    "id": "translation_engine",
+    "label": "Translation engine",
+    "type": "enum",
+    "values": [
+      "Baidu",
+      "Google",
+      "GoogleFree",
+      "DeepL",
+      "OpenAI"
+    ],
+    "default": "Baidu"
+  },
+  {
+    "id": "translation_engine_parameters",
+    "label": "Translation engine parameters",
+    "type": "text",
+    "default": ""
+  }
+]
